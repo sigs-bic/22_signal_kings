@@ -2,7 +2,17 @@ import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
 from scipy.signal import freqz
-from scipy.io.wavfile import write
+from scipy.io import wavfile
+from scipy.io.wavfile import write, read
+import wave
+from dataclasses import dataclass
+
+@dataclass
+class SignalInfoOutput:
+    data: list
+    samplerate: int
+    duration: float|int
+
 
 
 
@@ -231,3 +241,27 @@ def save_signal(signal, sampling_rate, filename: str):
     audio = np.int16(signal * 32767) #here we see the normalized values get resized for the wav file, this will also prevent clipping when we convert the files. 
 
     write(filename, sampling_rate, audio)
+
+
+
+
+#from hands_on_1 exercise 2, I used a similar function to import my data, and get relevant paramenters
+def signal_info_data(file_path): 
+    samplerate, data = wavfile.read(file_path)
+    number_of_channels = 1 if data.ndim == 1 else data.shape[1]
+
+    print(f'number of channels: {number_of_channels}') #here we check if the data is from stereo, if it a has (x, 2) it means there are two columns, 2 audio channels, one for each ear, then we can handle this later
+    print(f'samplerate = {samplerate}, and number of samples = {len(data)}')#so song has sample rate of 44100, so it changes frequency 44100 per second
+
+    #duration is equal to the length of the sound file, we take all the samples and divide by sample per second, to get the amount of seconds
+    duration = len(data)/samplerate 
+
+    print(f'the duration of the sound file is: {duration} s')
+
+    #use the open function in wave library which gives us the numbet of bytes, times by 8 to get the bit size.
+    bit_size_per_sample = (wave.open(file_path, mode=None).getsampwidth())*8
+
+    print(f'bit size per sample: {bit_size_per_sample}') 
+    out = SignalInfoOutput(data = data, samplerate=samplerate, duration=duration)
+    return out
+
